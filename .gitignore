@@ -1,0 +1,11 @@
+# virtualenv / uv
+.venv/
+.uv-cache/
+__pycache__/
+*.pyc
+
+# training artifacts
+outputs/
+
+# logs
+*.log
