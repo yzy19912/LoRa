@@ -1,0 +1,23 @@
+[project]
+name = "langgraph-learn"
+version = "0.1.0"
+description = "Learn LangGraph: fan-out/fan-in, human-in-the-loop, checkpointer + Langfuse observability"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph>=1.0",
+    "langgraph-checkpoint-sqlite>=2.0",
+    "langchain-core>=0.3",
+    "langchain-openai>=0.2",
+    "langfuse>=2.0",
+    "python-dotenv>=1.0",
+    "langchain>=0.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
