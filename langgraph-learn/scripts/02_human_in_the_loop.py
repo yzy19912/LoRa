@@ -27,7 +27,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
-
 from langgraph_learn.checkpointer import thread_config
 from langgraph_learn.graph import build_graph
 
@@ -65,7 +64,9 @@ def main() -> None:
 
     decision = get_decision()
     graph.invoke(Command(resume=decision), config)
-    print(f"[after {decision!r:<18}] approved={graph.get_state(config).values['approved']!r}")
+    print(
+        f"[after {decision!r:<18}] approved={graph.get_state(config).values['approved']!r}"
+    )
 
     if graph.get_state(config).interrupts:
         print("\n(requested a revision — the graph looped back to the human)")
@@ -73,9 +74,11 @@ def main() -> None:
         graph.invoke(Command(resume="approve"), config)
 
     final = graph.get_state(config).values
-    print(f"\nfinal state   -> approved={final['approved']}, "
-          f"report={len(final['full_report'])} chars, "
-          f"revision_round={final['revision_round']}")
+    print(
+        f"\nfinal state   -> approved={final['approved']}, "
+        f"report={len(final['full_report'])} chars, "
+        f"revision_round={final['revision_round']}"
+    )
     print("note: every step above was persisted as a checkpoint (see example 03).")
 
 

@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 
@@ -20,7 +20,7 @@ model = model.to(device)
 messages = [
     {
         "role": "user",
-        "content": "Explain what revenue recognition means in one sentence."
+        "content": "Explain what revenue recognition means in one sentence.",
     }
 ]
 
@@ -43,7 +43,7 @@ with torch.no_grad():
         do_sample=True,
     )
 
-generated = outputs[0][inputs.input_ids.shape[1]:]
+generated = outputs[0][inputs.input_ids.shape[1] :]
 
 response = tokenizer.decode(
     generated,

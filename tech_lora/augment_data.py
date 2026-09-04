@@ -9,12 +9,10 @@ Usage:  uv run python tech_lora/augment_data.py
 """
 
 import json
-import re
-import torch
 from pathlib import Path
 
-from transformers import AutoTokenizer, AutoModelForCausalLM
-
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -34,7 +32,8 @@ if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 
 model = AutoModelForCausalLM.from_pretrained(
-    MODEL_NAME, torch_dtype=torch.float32,
+    MODEL_NAME,
+    torch_dtype=torch.float32,
 )
 model = model.to(device)
 model.eval()
@@ -81,7 +80,9 @@ def generate_fact(topic: str, max_tokens: int = 256) -> str | None:
     ]
 
     text = tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True,
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
     )
     inputs = tokenizer(text, return_tensors="pt").to(device)
 
@@ -96,7 +97,7 @@ def generate_fact(topic: str, max_tokens: int = 256) -> str | None:
             eos_token_id=tokenizer.eos_token_id,
         )
 
-    generated_tokens = outputs[0][inputs.input_ids.shape[1]:]
+    generated_tokens = outputs[0][inputs.input_ids.shape[1] :]
     response = tokenizer.decode(generated_tokens, skip_special_tokens=True)
     return response
 
@@ -134,10 +135,12 @@ def make_qa_pairs(concept: str, answer: str) -> list[dict]:
     for q in starters:
         if q not in seen:
             seen.add(q)
-            pairs.append({
-                "instruction": q,
-                "response": f"CONCEPT: {concept}\nANSWER: {answer}",
-            })
+            pairs.append(
+                {
+                    "instruction": q,
+                    "response": f"CONCEPT: {concept}\nANSWER: {answer}",
+                }
+            )
 
     return pairs
 
@@ -220,7 +223,9 @@ def main():
 
     # Filter out topics that overlap with existing concepts
     new_topics_filtered = [t for t in new_topics if t not in original_concepts]
-    print(f"Topics to explore: {len(new_topics_filtered)} (skipped {len(new_topics) - len(new_topics_filtered)} overlapping)")
+    print(
+        f"Topics to explore: {len(new_topics_filtered)} (skipped {len(new_topics) - len(new_topics_filtered)} overlapping)"
+    )
 
     # Generate new knowledge
     new_knowledge = []
@@ -232,11 +237,13 @@ def main():
                 # Check for hallucination indicators
                 skip_indicators = ["我不知道", "不知道", "我不清楚", "没有相关信息"]
                 if not any(ind in answer for ind in skip_indicators):
-                    new_knowledge.append({
-                        "concept": concept,
-                        "answer": answer,
-                        "topic": topic,
-                    })
+                    new_knowledge.append(
+                        {
+                            "concept": concept,
+                            "answer": answer,
+                            "topic": topic,
+                        }
+                    )
                     print(f"  ✓ {topic} -> {concept}")
                 else:
                     print(f"  - {topic}: model says unknown")
@@ -282,8 +289,7 @@ def main():
 
     # Save
     with open(DST_JSONL, "w", encoding="utf-8") as f:
-        for rec in augmented:
-            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        f.writelines(json.dumps(rec, ensure_ascii=False) + "\n" for rec in augmented)
 
     print(f"Saved to {DST_JSONL}")
 

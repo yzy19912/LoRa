@@ -7,20 +7,20 @@ Usage:  DEVICE=cpu uv run python tech_lora/train_augmented.py
 import os
 from pathlib import Path
 
-os.environ['HF_DATASETS_CACHE'] = '/tmp/hf_datasets_cache'
-os.environ['HUGGINGFACE_HUB_CACHE'] = '/tmp/hf_hub_cache'
-os.makedirs('/tmp/hf_datasets_cache', exist_ok=True)
-os.makedirs('/tmp/hf_hub_cache', exist_ok=True)
+os.environ["HF_DATASETS_CACHE"] = "/tmp/hf_datasets_cache"
+os.environ["HUGGINGFACE_HUB_CACHE"] = "/tmp/hf_hub_cache"
+os.makedirs("/tmp/hf_datasets_cache", exist_ok=True)
+os.makedirs("/tmp/hf_hub_cache", exist_ok=True)
 
 import torch
 from datasets import load_dataset
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-    TrainingArguments,
-    Trainer,
-)
 from peft import LoraConfig, get_peft_model
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    Trainer,
+    TrainingArguments,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
@@ -45,10 +45,20 @@ model.to(device)
 
 # LoRA
 lora_config = LoraConfig(
-    r=16, lora_alpha=32, lora_dropout=0.05,
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                    "gate_proj", "up_proj", "down_proj"],
-    bias="none", task_type="CAUSAL_LM",
+    r=16,
+    lora_alpha=32,
+    lora_dropout=0.05,
+    target_modules=[
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj",
+    ],
+    bias="none",
+    task_type="CAUSAL_LM",
 )
 model = get_peft_model(model, lora_config)
 model.print_trainable_parameters()
@@ -56,6 +66,7 @@ model.print_trainable_parameters()
 # dataset
 dataset = load_dataset("json", data_files=str(DATASET_PATH), split="train")
 print(f"Dataset size: {len(dataset)} rows", flush=True)
+
 
 # preprocess
 def preprocess(example):
@@ -69,7 +80,9 @@ def preprocess(example):
         {"role": "user", "content": example["instruction"]},
     ]
     prompt_text = tokenizer.apply_chat_template(
-        prompt_messages, tokenize=False, add_generation_prompt=True,
+        prompt_messages,
+        tokenize=False,
+        add_generation_prompt=True,
     )
     full_messages = [
         {"role": "system", "content": system_prompt},
@@ -77,17 +90,25 @@ def preprocess(example):
         {"role": "assistant", "content": example["response"]},
     ]
     full_text = tokenizer.apply_chat_template(
-        full_messages, tokenize=False, add_generation_prompt=False,
+        full_messages,
+        tokenize=False,
+        add_generation_prompt=False,
     )
-    prompt_tokens = tokenizer(prompt_text, add_special_tokens=False, truncation=True, max_length=512)
-    full_tokens = tokenizer(full_text, add_special_tokens=False, truncation=True, max_length=512)
+    prompt_tokens = tokenizer(
+        prompt_text, add_special_tokens=False, truncation=True, max_length=512
+    )
+    full_tokens = tokenizer(
+        full_text, add_special_tokens=False, truncation=True, max_length=512
+    )
     input_ids = full_tokens["input_ids"]
     attention_mask = full_tokens["attention_mask"]
     labels = input_ids.copy()
-    labels[:len(prompt_tokens["input_ids"])] = [-100] * len(prompt_tokens["input_ids"])
+    labels[: len(prompt_tokens["input_ids"])] = [-100] * len(prompt_tokens["input_ids"])
     return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": labels}
 
+
 tokenized_dataset = dataset.map(preprocess, remove_columns=dataset.column_names)
+
 
 def collate_fn(batch):
     max_length = max(len(x["input_ids"]) for x in batch)
@@ -103,6 +124,7 @@ def collate_fn(batch):
         "attention_mask": torch.tensor(attention_masks, dtype=torch.long),
         "labels": torch.tensor(labels, dtype=torch.long),
     }
+
 
 # Conservative training: 3 epochs, small lr
 training_args = TrainingArguments(

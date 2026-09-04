@@ -1,10 +1,8 @@
 from pathlib import Path
 
 import torch
-
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
-
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -92,7 +90,7 @@ while True:
             eos_token_id=tokenizer.eos_token_id,
         )
 
-    generated_tokens = outputs[0][inputs.input_ids.shape[1]:]
+    generated_tokens = outputs[0][inputs.input_ids.shape[1] :]
     response = tokenizer.decode(generated_tokens, skip_special_tokens=True)
 
     print("\nModel:", response)

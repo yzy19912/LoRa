@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 from langgraph.types import Command
-
 from langgraph_learn.checkpointer import create_checkpointer, thread_config
-from langgraph_learn.graph import AGGREGATE, RESEARCH, build_graph
+from langgraph_learn.graph import AGGREGATE, build_graph
 
 
 @pytest.fixture
@@ -103,7 +102,11 @@ def test_time_travel_fork(graph):
     # find the round-0 review pause
     pause = None
     for snap in graph.get_state_history(config):
-        if snap.interrupts and "review_node" in snap.next and snap.values.get("revision_round") == 0:
+        if (
+            snap.interrupts
+            and "review_node" in snap.next
+            and snap.values.get("revision_round") == 0
+        ):
             pause = snap
             break
     assert pause is not None
@@ -118,7 +121,11 @@ def test_time_travel_fork(graph):
     # the original outcome is still in the same thread history
     original = None
     for snap in graph.get_state_history(config):
-        if not snap.interrupts and snap.next == () and snap.values["full_report"] != alt["full_report"]:
+        if (
+            not snap.interrupts
+            and snap.next == ()
+            and snap.values["full_report"] != alt["full_report"]
+        ):
             original = snap.values["full_report"]
             break
     assert original is not None

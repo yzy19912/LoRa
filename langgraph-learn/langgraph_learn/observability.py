@@ -60,7 +60,11 @@ def get_langfuse_handler(
         trace_context["metadata"] = metadata
 
     try:
-        handler = CallbackHandler(trace_context=trace_context) if trace_context else CallbackHandler()
+        handler = (
+            CallbackHandler(trace_context=trace_context)
+            if trace_context
+            else CallbackHandler()
+        )
         print("[observability] Langfuse tracing enabled.")
         return handler
     except Exception as err:  # pragma: no cover - defensive
@@ -92,7 +96,9 @@ class ConsoleTraceHandler(BaseCallbackHandler):
         self.name = name
         self._depth = 0
 
-    def on_chain_start(self, serialized, inputs, *, run_id, parent_run_id=None, **kwargs):
+    def on_chain_start(
+        self, serialized, inputs, *, run_id, parent_run_id=None, **kwargs
+    ):
         tag = serialized.get("name") if isinstance(serialized, dict) else self.name
         print(f"  {'  ' * self._depth}>> start       {tag}")
         self._depth += 1
@@ -104,7 +110,7 @@ class ConsoleTraceHandler(BaseCallbackHandler):
         self._depth = max(0, self._depth - 1)
         # A pause via interrupt() surfaces to this callback as an "error".
         if type(error).__name__ == "GraphInterrupt":
-            print(f"  II interrupt  graph paused at a human-in-the-loop gate")
+            print("  II interrupt  graph paused at a human-in-the-loop gate")
             return
         print(f"  !! error      {error!r}")
 

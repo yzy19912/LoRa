@@ -1,10 +1,8 @@
 from pathlib import Path
 
 import torch
-
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
-
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 ROOT = Path(__file__).resolve().parents[1]
 

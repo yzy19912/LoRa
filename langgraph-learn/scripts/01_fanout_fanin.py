@@ -28,7 +28,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
-
 from langgraph_learn.checkpointer import thread_config
 from langgraph_learn.graph import AGGREGATE, RESEARCH, build_graph
 
@@ -40,7 +39,9 @@ def main() -> None:
     print("invoking — streaming every partial state update as it happens")
     print("-" * 72)
 
-    for update in graph.stream({"topic": "matching engines"}, config, stream_mode="updates"):
+    for update in graph.stream(
+        {"topic": "matching engines"}, config, stream_mode="updates"
+    ):
         for node_name, payload in update.items():
             label = node_name
             if node_name == RESEARCH and payload.get("sections"):
@@ -58,8 +59,10 @@ def main() -> None:
 
     final = graph.get_state(config).values
     print(f"\nfinal report -> {len(final['full_report'])} chars,")
-    print(f"  sections stored by reducer: {len(final['sections'])} "
-          f"(one per worker per round)")
+    print(
+        f"  sections stored by reducer: {len(final['sections'])} "
+        f"(one per worker per round)"
+    )
 
 
 if __name__ == "__main__":

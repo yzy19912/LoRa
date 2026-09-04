@@ -2,16 +2,14 @@ import os
 from pathlib import Path
 
 import torch
-
 from datasets import load_dataset
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-    TrainingArguments,
-    Trainer,
-)
 from peft import LoraConfig, get_peft_model
-
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    Trainer,
+    TrainingArguments,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -89,6 +87,7 @@ dataset = load_dataset(
 # 5. preprocess
 # --------------------------------------------------
 
+
 def preprocess(example):
     system_prompt = (
         "你是一个严谨的自贡井盐与地方史问答助手。"
@@ -157,6 +156,7 @@ tokenized_dataset = dataset.map(
 # 6. custom collator
 # --------------------------------------------------
 
+
 def collate_fn(batch):
 
     max_length = max(len(x["input_ids"]) for x in batch)
@@ -166,24 +166,14 @@ def collate_fn(batch):
     labels = []
 
     for item in batch:
-
         length = len(item["input_ids"])
         padding_length = max_length - length
 
-        input_ids.append(
-            item["input_ids"]
-            + [tokenizer.pad_token_id] * padding_length
-        )
+        input_ids.append(item["input_ids"] + [tokenizer.pad_token_id] * padding_length)
 
-        attention_masks.append(
-            item["attention_mask"]
-            + [0] * padding_length
-        )
+        attention_masks.append(item["attention_mask"] + [0] * padding_length)
 
-        labels.append(
-            item["labels"]
-            + [-100] * padding_length
-        )
+        labels.append(item["labels"] + [-100] * padding_length)
 
     return {
         "input_ids": torch.tensor(input_ids, dtype=torch.long),

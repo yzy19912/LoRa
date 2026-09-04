@@ -25,7 +25,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from langgraph.types import Command
-
 from langgraph_learn.checkpointer import create_checkpointer, thread_config
 from langgraph_learn.graph import build_graph
 
@@ -36,13 +35,14 @@ def run_to_interrupt(graph, config, topic: str) -> None:
     if not graph.get_state(config).interrupts:
         graph.invoke({"topic": topic}, config)
     snap = graph.get_state(config)
-    print(f"  -> {'paused' if snap.interrupts else 'finished'}, "
-          f"next={snap.next!r}")
+    print(f"  -> {'paused' if snap.interrupts else 'finished'}, next={snap.next!r}")
 
 
 def show_timeline(graph, config) -> None:
     history = list(graph.get_state_history(config))
-    print(f"\n--- checkpoint timeline ({len(history)} checkpoints, oldest -> newest) ---")
+    print(
+        f"\n--- checkpoint timeline ({len(history)} checkpoints, oldest -> newest) ---"
+    )
     for i, snap in enumerate(reversed(history)):
         rev = snap.values.get("revision_round", "?")
         where = ", ".join(snap.next) or "END"
@@ -57,15 +57,17 @@ def main() -> None:
     # ---- 1. persistence across processes --------------------------------
     persist_id = f"demo-persist-{int(time.time())}"
     persist_cfg = thread_config(persist_id)
-    print(f"[1] thread {persist_id!r} pauses at the human gate; "
-          "state is saved to checkpoints.db")
+    print(
+        f"[1] thread {persist_id!r} pauses at the human gate; "
+        "state is saved to checkpoints.db"
+    )
     run_to_interrupt(graph, persist_cfg, "recommendation systems")
 
     print("\n    a NEW process (fresh graph, fresh checkpointer) resumes it:")
     proc = subprocess.run(
-        [sys.executable, "-m", "langgraph_learn.cross_process",
-         persist_id, "approve"],
-        capture_output=True, text=True,
+        [sys.executable, "-m", "langgraph_learn.cross_process", persist_id, "approve"],
+        capture_output=True,
+        text=True,
     )
     print("   " + proc.stdout.replace("\n", "\n   ").strip())
     if proc.returncode != 0:
@@ -76,9 +78,9 @@ def main() -> None:
     rev_id = f"demo-rev-{int(time.time())}"
     cfg = thread_config(rev_id)
     print(f"\n[2] thread {rev_id!r}: one revision round, then approval")
-    run_to_interrupt(graph, cfg, "recsys cold start")          # round 0
-    graph.invoke(Command(resume="be more concise"), cfg)       # round 1
-    run_to_interrupt(graph, cfg, "")                            # round 1 review
+    run_to_interrupt(graph, cfg, "recsys cold start")  # round 0
+    graph.invoke(Command(resume="be more concise"), cfg)  # round 1
+    run_to_interrupt(graph, cfg, "")  # round 1 review
     graph.invoke(Command(resume="approve"), cfg)
 
     show_timeline(graph, cfg)
@@ -86,8 +88,11 @@ def main() -> None:
     # ---- 3. time travel: replay from round-0, answer differently --------
     pause0 = None
     for snap in graph.get_state_history(cfg):
-        if snap.interrupts and "review_node" in snap.next \
-                and snap.values.get("revision_round") == 0:
+        if (
+            snap.interrupts
+            and "review_node" in snap.next
+            and snap.values.get("revision_round") == 0
+        ):
             pause0 = snap
             break
 
@@ -95,24 +100,33 @@ def main() -> None:
         print("\n(no round-0 review checkpoint found - skipping time travel)")
     else:
         ckpt = pause0.config["configurable"]["checkpoint_id"]
-        print(f"\n[3] time travel to round-0 review (ckpt {ckpt[:8]}\u2026): "
-              "replay, then answer differently")
+        print(
+            f"\n[3] time travel to round-0 review (ckpt {ckpt[:8]}\u2026): "
+            "replay, then answer differently"
+        )
         rt = {"configurable": {"thread_id": rev_id, "checkpoint_id": ckpt}}
-        graph.invoke(None, rt)                # replay -> new tail interrupt
+        graph.invoke(None, rt)  # replay -> new tail interrupt
         alt = graph.invoke(Command(resume="add real metrics"), cfg)  # tail resume
 
         original = None
         for snap in graph.get_state_history(cfg):
-            if not snap.interrupts and snap.next == () \
-                    and snap.values.get("revision_round") == 1 \
-                    and snap.values["full_report"] != alt["full_report"]:
+            if (
+                not snap.interrupts
+                and snap.next == ()
+                and snap.values.get("revision_round") == 1
+                and snap.values["full_report"] != alt["full_report"]
+            ):
                 original = snap.values["full_report"]
                 break
 
-        print(f"    alternate report mentions 'add real metrics': "
-              f"{'add real metrics' in alt['full_report']}")
-        print(f"    original report  mentions 'be more concise':   "
-              f"{(original or '').__contains__('be more concise')}")
+        print(
+            f"    alternate report mentions 'add real metrics': "
+            f"{'add real metrics' in alt['full_report']}"
+        )
+        print(
+            f"    original report  mentions 'be more concise':   "
+            f"{(original or '').__contains__('be more concise')}"
+        )
         print("    -> two divergent v1 reports coexist in the same timeline.")
 
     # ---- 4. edit state with no node involved ----------------------------

@@ -30,15 +30,21 @@ def resume_process(thread_id: str, decision: str) -> None:
 
     snap = graph.get_state(config)
     if not snap.interrupts:
-        print(f"[pid {os.getpid()}] no paused interrupt for thread {thread_id!r} — nothing to do")
+        print(
+            f"[pid {os.getpid()}] no paused interrupt for thread {thread_id!r} — nothing to do"
+        )
         return
 
-    print(f"[pid {os.getpid()}] found a paused run (thread {thread_id!r}), "
-          f"node={snap.next!r}, pending interrupts={len(snap.interrupts)}")
+    print(
+        f"[pid {os.getpid()}] found a paused run (thread {thread_id!r}), "
+        f"node={snap.next!r}, pending interrupts={len(snap.interrupts)}"
+    )
     print(f"[pid {os.getpid()}] resuming with decision {decision!r} …")
     out = graph.invoke(Command(resume=decision), config)
-    print(f"[pid {os.getpid()}] done -> approved={out.get('approved')}, "
-          f"report={len(out.get('full_report', ''))} chars")
+    print(
+        f"[pid {os.getpid()}] done -> approved={out.get('approved')}, "
+        f"report={len(out.get('full_report', ''))} chars"
+    )
 
 
 def main() -> None:

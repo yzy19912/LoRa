@@ -15,11 +15,11 @@ from .graph import build_graph
 from .observability import ConsoleTraceHandler, get_langfuse_handler, langfuse_trace_url
 
 __all__ = [
+    "ConsoleTraceHandler",
     "build_graph",
     "create_checkpointer",
-    "list_threads",
-    "thread_config",
-    "ConsoleTraceHandler",
     "get_langfuse_handler",
     "langfuse_trace_url",
+    "list_threads",
+    "thread_config",
 ]

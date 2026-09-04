@@ -18,7 +18,6 @@ Run:
 
 from __future__ import annotations
 
-import os
 import sys
 import uuid
 from pathlib import Path
@@ -27,14 +26,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except ImportError:  # pragma: no cover - dotenv is installed
     pass
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
-
-from langgraph_learn.checkpointer import thread_config
 from langgraph_learn.graph import build_graph
 from langgraph_learn.observability import (
     ConsoleTraceHandler,
@@ -71,16 +69,22 @@ def main() -> None:
     graph.invoke(Command(resume="approve"), config)
 
     final = graph.get_state(config).values
-    print(f"\nrun finished -> approved={final['approved']}, "
-          f"report={len(final['full_report'])} chars")
+    print(
+        f"\nrun finished -> approved={final['approved']}, "
+        f"report={len(final['full_report'])} chars"
+    )
 
     if langfuse_handler:
         url = langfuse_trace_url(trace_id)
         print(f"\nLangfuse trace id: {trace_id}")
-        print(f"Langfuse trace url: {url or '(host unreachable — still exported async)'}")
+        print(
+            f"Langfuse trace url: {url or '(host unreachable — still exported async)'}"
+        )
     else:
-        print("\n> Langfuse not configured - set LANGFUSE_PUBLIC_KEY / "
-              "LANGFUSE_SECRET_KEY in .env and re-run to upload traces.")
+        print(
+            "\n> Langfuse not configured - set LANGFUSE_PUBLIC_KEY / "
+            "LANGFUSE_SECRET_KEY in .env and re-run to upload traces."
+        )
 
 
 if __name__ == "__main__":

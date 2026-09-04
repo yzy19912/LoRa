@@ -72,4 +72,4 @@ def build_graph(checkpointer: Any | None = None):
     return builder.compile(checkpointer=checkpointer)
 
 
-__all__ = ["build_graph", "PLAN", "RESEARCH", "AGGREGATE", "REVIEW", "REVISION"]
+__all__ = ["AGGREGATE", "PLAN", "RESEARCH", "REVIEW", "REVISION", "build_graph"]

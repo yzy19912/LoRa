@@ -73,10 +73,14 @@ def plan_node(state: GraphState) -> dict:
     if _llm_enabled():
         import json
 
-        raw = _chat().invoke(
-            "Return a JSON list of 3-5 short subtopics to research for the topic "
-            f'"{state["topic"]}". Only the JSON array, e.g. ["a", "b"].'
-        ).content
+        raw = (
+            _chat()
+            .invoke(
+                "Return a JSON list of 3-5 short subtopics to research for the topic "
+                f'"{state["topic"]}". Only the JSON array, e.g. ["a", "b"].'
+            )
+            .content
+        )
         plan = json.loads(raw)
     else:
         plan = _MOCK_SECTIONS[:]
@@ -132,12 +136,15 @@ def fan_out(state: GraphState) -> list:
     from langgraph.types import Send
 
     return [
-        Send("research_section", {
-            "section": s,
-            "topic": state["topic"],
-            "revision_round": state.get("revision_round", 0),
-            "feedback": state.get("feedback"),
-        })
+        Send(
+            "research_section",
+            {
+                "section": s,
+                "topic": state["topic"],
+                "revision_round": state.get("revision_round", 0),
+                "feedback": state.get("feedback"),
+            },
+        )
         for s in state["plan"]
     ]
 
@@ -148,10 +155,7 @@ def aggregate_node(state: GraphState) -> dict:
     revision round (the reducer list keeps older rounds around).
     """
     revision = state.get("revision_round", 0)
-    sections = [
-        s for s in state.get("sections", [])
-        if s["revision_round"] == revision
-    ]
+    sections = [s for s in state.get("sections", []) if s["revision_round"] == revision]
     sections.sort(key=lambda s: s["section"])
 
     report = "\n\n".join(f"## {s['section']}\n{s['content']}" for s in sections)
@@ -172,12 +176,14 @@ def review_node(state: GraphState) -> dict:
       * human replies ``approve``             -> report accepted.
       * anything else is revision feedback  -> loop back to the rewrite cycle.
     """
-    decision = interrupt({
-        "ask": "Review the report. Reply 'approve' to accept, or paste "
-               "feedback for another revision round.",
-        "report": state["full_report"],
-        "revision_round": state.get("revision_round", 0),
-    })
+    decision = interrupt(
+        {
+            "ask": "Review the report. Reply 'approve' to accept, or paste "
+            "feedback for another revision round.",
+            "report": state["full_report"],
+            "revision_round": state.get("revision_round", 0),
+        }
+    )
 
     if isinstance(decision, str):
         decision = decision.strip() or "approve"
